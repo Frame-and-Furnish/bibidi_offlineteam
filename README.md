@@ -119,7 +119,6 @@ Before you begin, ensure you have the following installed:
    Create a `.env.local` file in the root directory:
    ```env
    NEXT_PUBLIC_API_URL=your_api_url
-   NEXT_PUBLIC_MAP_API_KEY=your_map_api_key
    ```
 
 ### Running the Application
@@ -341,8 +340,8 @@ This project is part of the Bibidi platform and is proprietary software. All rig
 ## 🌐 Support & Contact
 
 For support, questions, or feedback:
-- **Email**: support@bibidi.com
-- **Documentation**: [docs.bibidi.com](https://docs.bibidi.com)
+- **Email**: hello@bibidi.ca
+- **Documentation**: [bibidi.ca](https://bibidi.ca)
 - **Community**: Join our team chat
 
 ---
