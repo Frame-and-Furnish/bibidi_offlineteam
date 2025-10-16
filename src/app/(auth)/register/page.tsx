@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import Image from 'next/image'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
 const cities = [
   'Kelowna',
@@ -41,6 +43,10 @@ const registerSchema = z.object({
   city: z.string()
     .min(2, 'City must be at least 2 characters')
     .max(50, 'City must be less than 50 characters'),
+  phone: z.string()
+    .min(10, 'Phone number must be at least 10 digits')
+    .max(10, 'Phone number must be less than 10 digits')
+    .regex(/^[0-9]+$/, 'Phone number must contain only numbers'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
@@ -53,6 +59,7 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 const Register = () => {
+  const router = useRouter()
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -61,6 +68,7 @@ const Register = () => {
       password: '',
       confirmPassword: '',
       city: 'Kelowna',
+      phone: '',
     },
   })
 
@@ -69,10 +77,16 @@ const Register = () => {
       console.log('Registration data:', data)
       // Here you would typically send the data to your backend API
       // await registerUser(data)
-      
-      // For now, just show success message
-      alert('Registration successful!')
-      form.reset()
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/recruiters/register`, data)
+      console.log('Registration response:', response)
+      if (response.status == 201 || response.status == 200) {
+        alert('Registration successful!')
+        form.reset()
+        router.push('/login')
+      } else {
+        alert('Registration failed. Please try again.')
+        form.reset()
+      }
     } catch (error) {
       console.error('Registration error:', error)
       alert('Registration failed. Please try again.')
@@ -164,6 +178,23 @@ const Register = () => {
                         <Input
                           type="password"
                           placeholder="Confirm your password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField 
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          placeholder="Enter your phone number"
                           {...field}
                         />
                       </FormControl>
