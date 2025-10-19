@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ import {
   Sun,
   Activity
 } from 'lucide-react';
+import axios from 'axios';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -42,13 +43,31 @@ export default function SettingsPage() {
   const [theme, setTheme] = useState('light');
   const [language, setLanguage] = useState('en');
   const [timezone, setTimezone] = useState('UTC-8');
-
+  const [recruiter, setRecruiter] = useState<any>(null);
   const tabs = [
     { id: 'profile', label: 'Profile', icon: <User className="h-4 w-4" /> },
     { id: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4" /> },
     { id: 'security', label: 'Security', icon: <Shield className="h-4 w-4" /> },
     { id: 'appearance', label: 'Appearance', icon: <Palette className="h-4 w-4" /> },
   ];
+
+useEffect(() => {
+  const fetchRecruiter = async () => {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recruiters/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (response.status == 200 || response.status == 201) {
+      setRecruiter(response.data.data);
+      console.log(response.data.data);
+    } else {
+      alert('Failed to fetch recruiter');
+    }
+  };
+  fetchRecruiter();
+}, []);
 
   const handleNotificationChange = (key: string, value: boolean) => {
     setNotifications(prev => ({ ...prev, [key]: value }));
@@ -110,15 +129,15 @@ export default function SettingsPage() {
                   <div className="flex items-center space-x-6">
                     <div className="relative">
                       <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-2xl font-bold text-blue-600">JS</span>
+                        <span className="text-2xl font-bold text-blue-600">{recruiter?.user?.firstName?.charAt(0)}{recruiter?.user?.lastName?.charAt(0)}</span>
                       </div>
                       <Button size="sm" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0">
                         <Edit className="h-4 w-4" />
                       </Button>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">John Smith</h3>
-                      <p className="text-gray-600">john.smith@company.com</p>
+                      <h3 className="text-lg font-semibold text-gray-900">{recruiter?.user?.firstName} {recruiter?.user?.lastName}</h3>
+                      <p className="text-gray-600">{recruiter?.user?.email}</p>
                       <Badge className="bg-green-100 text-green-800 mt-1">
                         <Check className="h-3 w-3 mr-1" />
                         Verified
@@ -129,27 +148,27 @@ export default function SettingsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" defaultValue="John" />
+                      <Input id="firstName" defaultValue={recruiter?.user?.firstName} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" defaultValue="Smith" />
+                      <Input id="lastName" defaultValue={recruiter?.user?.lastName} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" defaultValue="john.smith@company.com" />
+                      <Input id="email" type="email" defaultValue={recruiter?.user?.email} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" defaultValue="+1 (555) 123-4567" />
+                      <Input id="phone" defaultValue={recruiter?.recruiter?.phone} />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="title">Job Title</Label>
-                      <Input id="title" defaultValue="Senior Architect" />
+                      <Input id="title" defaultValue="Recruiter" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="department">Department</Label>
-                      <Input id="department" defaultValue="Engineering" />
+                      <Label htmlFor="city">City</Label>
+                      <Input id="city" defaultValue={recruiter?.recruiter?.city} />
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <Label htmlFor="bio">Bio</Label>
@@ -157,7 +176,7 @@ export default function SettingsPage() {
                         id="bio"
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        defaultValue="Senior architect with 8+ years of experience in residential and commercial design."
+                        defaultValue="Bibidi Offline Team is a platform for recruiters to find the best candidates for their jobs."
                       />
                     </div>
                   </div>

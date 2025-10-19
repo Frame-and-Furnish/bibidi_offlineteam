@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ import {
   Send
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import axios from 'axios';
 
 // Dynamically import the map component to avoid SSR issues
 const TeamMap = dynamic(() => import('@/components/dashboard/TeamMap'), {
@@ -45,13 +46,13 @@ interface TeamMember {
   email: string;
   phone: string;
   location: string;
-  coordinates: {
-    lat: number;
-    lng: number;
+  coordinates?: {
+    lat?: number;
+    lng?: number;
   };
   role: string;
-  avatar?: string;
-  status: 'active' | 'away' | 'offline';
+  avatarUrl?: string;
+  status: 'active' | 'pending' | 'offline';
 }
 
 export default function Team() {
@@ -60,7 +61,10 @@ export default function Team() {
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [showMap, setShowMap] = useState(true);
 
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+
   // Sample team members data (in a real app, this would come from an API)
+  /*
   const [teamMembers] = useState<TeamMember[]>([
     {
       id: 1,
@@ -113,6 +117,27 @@ export default function Team() {
       status: 'offline',
     },
   ]);
+*/
+
+
+useEffect(() => {
+  const fetchTeamMembers = async () => {
+    const token = localStorage.getItem('token');
+    const recruiter = JSON.parse(localStorage.getItem('recruiter') || '{}');
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recruiters`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (response.status == 200 || response.status == 201) {
+      console.log(response.data.data);
+      setTeamMembers(response.data.data.filter((member: any) => member.id != recruiter.id));
+    } else {
+      alert('Failed to fetch team members');
+    }
+  };
+  fetchTeamMembers();
+}, []);
 
   // Filter team members based on search query
   const filteredMembers = teamMembers.filter(
@@ -136,7 +161,7 @@ export default function Team() {
     switch (status) {
       case 'active':
         return 'bg-green-500';
-      case 'away':
+      case 'pending':
         return 'bg-yellow-500';
       case 'offline':
         return 'bg-gray-400';
@@ -296,7 +321,7 @@ export default function Team() {
                 <div className="flex items-start gap-4">
                   <div className="relative">
                     <Avatar className="h-16 w-16">
-                      <AvatarImage src={member.avatar} alt={member.name} />
+                      <AvatarImage src={member.avatarUrl || ''} alt={member.name} />
                       <AvatarFallback className="text-lg font-semibold bg-blue-100 text-blue-600">
                         {getInitials(member.name)}
                       </AvatarFallback>

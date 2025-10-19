@@ -31,16 +31,18 @@ import {
   IdCard,
   DollarSign
 } from 'lucide-react';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 interface ServiceProviderFormData {
   fullName: string;
   email: string;
-  mobileNumber: string;
+  phone: string;
   serviceCategory: string;
   city: string;
   pricePerHour: number;
   // Advanced fields
-  profilePicture?: File | null;
+  profilePictureUrl?: File | null;
   fullAddress?: string;
   bio?: string;
   govIdFront?: File | null;
@@ -82,9 +84,10 @@ const cities = [
 
 export default function ServiceProviderPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
   const [govIdFront, setGovIdFront] = useState<File | null>(null);
   const [govIdBack, setGovIdBack] = useState<File | null>(null);
+  const router = useRouter();
 
   const {
     register,
@@ -101,17 +104,23 @@ export default function ServiceProviderPage() {
     // Add file data
     const formData = {
       ...data,
-      profilePicture,
-      govIdFront,
-      govIdBack,
+      profilePictureUrl,
     };
 
     console.log('Form submitted:', formData);
-
-    // TODO: Implement API call to save service provider
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    alert('Service Provider onboarded successfully!');
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/offline/providers`, formData, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    console.log('Response:', response)
+    if (response.status == 200 || response.status == 201) {
+      alert('Service Provider onboarded successfully!');
+      router.push('/dashboard');
+    } else {
+      alert('Failed to onboard service provider. Please try again.');
+    }
   };
 
   return (
@@ -194,18 +203,18 @@ export default function ServiceProviderPage() {
 
               {/* Mobile Number */}
               <div className="space-y-3">
-                <Label htmlFor="mobileNumber" className="text-base font-semibold">
-                  Mobile Number <span className="text-red-500">*</span>
+                <Label htmlFor="phone" className="text-base font-semibold">
+                  Phone Number <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
-                    id="mobileNumber"
+                    id="phone"
                     type="tel"
                     placeholder="+1 234 567 8900"
                     className="pl-11 h-12 text-base"
-                    {...register('mobileNumber', {
-                      required: 'Mobile number is required',
+                    {...register('phone', {
+                      required: 'Phone number is required',
                       pattern: {
                         value: /^[\d\s\+\-\(\)]+$/,
                         message: 'Invalid phone number',
@@ -213,8 +222,8 @@ export default function ServiceProviderPage() {
                     })}
                   />
                 </div>
-                {errors.mobileNumber && (
-                  <p className="text-sm text-red-500">{errors.mobileNumber.message}</p>
+                {errors.phone && (
+                  <p className="text-sm text-red-500">{errors.phone.message}</p>
                 )}
               </div>
 
@@ -346,8 +355,15 @@ export default function ServiceProviderPage() {
                     Profile Picture
                   </Label>
                   <FileUpload
-                    value={profilePicture}
-                    onChange={setProfilePicture}
+                    value={profilePictureUrl}
+                    onChange={(file: File | null) => {
+                      if (file) {
+                        const url = URL.createObjectURL(file);
+                        setProfilePictureUrl(url);
+                      } else {
+                        setProfilePictureUrl(null);
+                      } 
+                    }}
                     accept="image/*"
                     maxSize={5}
                     preview={true}
