@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,20 +34,26 @@ import {
   MoreVertical,
   TrendingUp,
 } from 'lucide-react';
+import axios from 'axios';
 
 // Mock data for service providers
 interface ServiceProvider {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  serviceCategory: string;
+  category: string;
   pricePerHour: number;
   status: 'active' | 'pending';
   totalEarnings: number;
   phone: string;
   joinedDate: string;
+  recruiter: {
+    id: string;
+    email: string;
+  };
 }
-
+/*
 const mockServiceProviders: ServiceProvider[] = [
   {
     id: '1',
@@ -116,7 +122,7 @@ const mockServiceProviders: ServiceProvider[] = [
     joinedDate: '2024-04-12',
   },
 ];
-
+*/
 const serviceCategories = ['All', 'Carpentry', 'Painting', 'Electrical', 'Plumbing', 'Masonry', 'Gardening'];
 
 export default function Dashboard() {
@@ -124,8 +130,25 @@ export default function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [providers] = useState<ServiceProvider[]>(mockServiceProviders);
+  const [providers, setProviders] = useState<ServiceProvider[]>([]);
 
+
+  useEffect(() => {
+    const fetchProviders = async () => {
+      const token = localStorage.getItem('token');
+      const recruiter = JSON.parse(localStorage.getItem('recruiter') || '{}');
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/offline/providers`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log('Providers:', response.data.data.providers);
+      console.log('Recruiter:', recruiter);
+      //setProviders(response.data.data.providers)
+      setProviders(response.data.data.providers.filter((provider: ServiceProvider) => provider?.recruiter?.email == recruiter.email));
+    };
+    fetchProviders(); 
+  }, []);
   // Calculate stats
   const stats = useMemo(() => {
     const totalOnboarded = providers.filter(p => p.status === 'active').length;
@@ -145,12 +168,13 @@ export default function Dashboard() {
   const filteredProviders = useMemo(() => {
     return providers.filter((provider) => {
       const matchesSearch =
-        provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        provider.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        provider.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         provider.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        provider.serviceCategory.toLowerCase().includes(searchQuery.toLowerCase());
+        provider.category.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory =
-        categoryFilter === 'All' || provider.serviceCategory === categoryFilter;
+        categoryFilter === 'All' || provider.category === categoryFilter;
 
       const matchesStatus =
         statusFilter === 'all' || provider.status === statusFilter;
@@ -373,7 +397,7 @@ export default function Dashboard() {
                       >
                         <td className="py-4 px-4">
                           <div className="font-medium text-gray-900">
-                            {provider.name}
+                            {provider.firstName} {provider.lastName}
                           </div>
                         </td>
                         <td className="py-4 px-4">
@@ -383,7 +407,7 @@ export default function Dashboard() {
                         </td>
                         <td className="py-4 px-4">
                           <Badge variant="secondary">
-                            {provider.serviceCategory}
+                            {provider.category}
                           </Badge>
                         </td>
                         <td className="py-4 px-4">
@@ -442,7 +466,7 @@ export default function Dashboard() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <CardTitle className="text-lg">
-                            {provider.name}
+                            {provider.firstName} {provider.lastName}
                           </CardTitle>
                           <p className="text-sm text-gray-500 mt-1">
                             {provider.email}
@@ -482,7 +506,7 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500">Category</span>
                         <Badge variant="secondary">
-                          {provider.serviceCategory}
+                          {provider.category}
                         </Badge>
                       </div>
                       <div className="flex items-center justify-between">

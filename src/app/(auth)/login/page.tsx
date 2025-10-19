@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import axios from 'axios'
 
 // Zod schema for login form validation
 const loginSchema = z.object({
@@ -36,11 +37,17 @@ const Login = () => {
       console.log('Login data:', data)
       // Here you would typically send the data to your backend API
       // await loginUser(data)
-      
-      // For now, just show success message
-      alert('Login successful!')
-      form.reset()
-      router.push('/dashboard')
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, data)
+      console.log('Login response:', response)
+      if (response.status == 200 || response.status == 201) {
+        localStorage.setItem('token', response.data.data.token)
+        localStorage.setItem('recruiter', JSON.stringify(response.data.data.user))
+        alert('Login successful!')
+        form.reset()
+        router.push('/dashboard')
+      } else {
+        alert('Login failed. Please check your credentials and try again.')
+      }
     } catch (error) {
       console.error('Login error:', error)
       alert('Login failed. Please check your credentials and try again.')

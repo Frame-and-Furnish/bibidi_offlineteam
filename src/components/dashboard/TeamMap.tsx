@@ -20,12 +20,13 @@ interface TeamMember {
   email: string;
   phone: string;
   location: string;
-  coordinates: {
-    lat: number;
-    lng: number;
+  coordinates?: {
+    lat?: number;
+    lng?: number;
   };
   role: string;
-  avatar?: string;
+  avatarUrl?: string;
+  status: 'active' | 'pending' | 'offline';
 }
 
 interface TeamMapProps {
@@ -45,8 +46,8 @@ export default function TeamMap({ members }: TeamMapProps) {
       return { lat: 51.505, lng: -0.09 }; // Default to London
     }
     
-    const avgLat = members.reduce((sum, member) => sum + member.coordinates.lat, 0) / members.length;
-    const avgLng = members.reduce((sum, member) => sum + member.coordinates.lng, 0) / members.length;
+    const avgLat = members.reduce((sum, member) => sum + (member?.coordinates?.lat ?? 0), 0) / members.length;
+    const avgLng = members.reduce((sum, member) => sum + (member?.coordinates?.lng ?? 0), 0) / members.length;
     
     return { lat: avgLat, lng: avgLng };
   }, [members]);
@@ -74,7 +75,7 @@ export default function TeamMap({ members }: TeamMapProps) {
         {members.map((member) => (
           <Marker
             key={member.id}
-            position={[member.coordinates.lat, member.coordinates.lng]}
+            position={[member?.coordinates?.lat ?? 0, member?.coordinates?.lng ?? 0]}
           >
             <Popup>
               <div className="p-2">
