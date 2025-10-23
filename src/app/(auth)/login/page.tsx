@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import axios from 'axios'
+import { useUser } from '@/contexts/UserContext'
 
 // Zod schema for login form validation
 const loginSchema = z.object({
@@ -24,6 +25,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 const Login = () => {
   const router = useRouter()
+  const { login } = useUser()
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -40,8 +42,8 @@ const Login = () => {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, data)
       console.log('Login response:', response)
       if (response.status == 200 || response.status == 201) {
-        localStorage.setItem('token', response.data.data.token)
-        localStorage.setItem('recruiter', JSON.stringify(response.data.data.user))
+        // Use the context login method instead of direct localStorage manipulation
+        login(response.data.data.user, response.data.data.token)
         alert('Login successful!')
         form.reset()
         router.push('/dashboard')

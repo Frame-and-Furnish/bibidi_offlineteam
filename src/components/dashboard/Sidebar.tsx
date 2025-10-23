@@ -14,13 +14,16 @@ import {
   Download,
   User,
   Settings2,
-  LogOut
+  LogOut,
+  Headset
 } from 'lucide-react';
 
 import { FaTools } from "react-icons/fa";
 import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/contexts/UserContext';
+import Link from 'next/link';
 
 
 interface SidebarProps {
@@ -55,6 +58,12 @@ const navItems: NavItem[] = [
     href: '/dashboard/team'
   },
   {
+    id: 'support',
+    label: 'Support',
+    icon: <Headset className="h-5 w-5" />,
+    href: '/dashboard/support'
+  },
+  {
     id: 'settings',
     label: 'Settings',
     icon: <Settings className="h-5 w-5" />,
@@ -85,18 +94,8 @@ const quickActions = [
 
 export default function Sidebar({ className }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [recruiter, setRecruiter] = useState<any>({});
+  const { user, logout } = useUser();
   const router = useRouter();
-
-  useEffect(() => {
-    // Safely access localStorage only on the client side
-    if (typeof window !== 'undefined') {
-      const recruiterData = localStorage.getItem('recruiter');
-      if (recruiterData) {
-        setRecruiter(JSON.parse(recruiterData));
-      }
-    }
-  }, []);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
@@ -113,7 +112,9 @@ export default function Sidebar({ className }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!isCollapsed && (
+           <Link href="/">
           <div className="flex items-center space-x-2">
+           
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">BI</span>
             </div>
@@ -126,7 +127,9 @@ export default function Sidebar({ className }: SidebarProps) {
               />
               <span className="font-semibold text-gray-900 text-sm">Offline Team</span>
             </span>
+           
           </div>
+          </Link>
         )}
         <Button
           variant="ghost"
@@ -141,6 +144,7 @@ export default function Sidebar({ className }: SidebarProps) {
           )}
         </Button>
       </div>
+      
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
@@ -179,42 +183,35 @@ export default function Sidebar({ className }: SidebarProps) {
                 {/* Replace with dynamic user image if available */}
                 <Avatar>
                   <AvatarImage 
-                    src={recruiter?.profileImage || ''} // update source to profile image if you have
+                    src={user?.profileImage || ''} // update source to profile image if you have
                     alt="User Avatar"
                   />
                   <AvatarFallback>
                     {/* Fallback initials, update with user info */}
-                    {recruiter?.firstName?.charAt(0)}
+                    {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 {/* Render username if desired */}
-                <span className="font-medium text-gray-900 text-sm">{recruiter?.firstName}</span>
+                <span className="font-medium text-gray-900 text-sm">{user?.firstName || user?.email}</span>
               </div>
               {/* Dropdown on hover */}
               <div className="absolute left-0 min-w-[180px] bg-white border border-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto z-10 transition-opacity duration-200">
                 <div className="flex flex-col py-2">
-                  <a href={`/dashboard/account/${recruiter?.id}`}
+                  <a href={`/dashboard/settings/`}
                     className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-base"><User className="h-4 w-4" /></span>
                     Account
                   </a>
                   <a
-                    href={`/dashboard/settings/${recruiter?.id}`}
+                    href={`/dashboard/settings/`}
                     className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-base"><Settings2 className="h-4 w-4" /></span>
                     Settings
                   </a>
                   <button
-                    onClick={() => {
-                      // Clear localStorage and redirect to login or homepage
-                      if (typeof window !== 'undefined') {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('recruiter');
-                      }
-                      router.push('/login');
-                    }}
+                    onClick={logout}
                     className="px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2 text-left w-full"
                   >
                     <span className="material-symbols-outlined text-base"><LogOut className="h-4 w-4" /></span>
@@ -232,11 +229,11 @@ export default function Sidebar({ className }: SidebarProps) {
       <div className="flex flex-col items-center mt-5 group relative">
         <Avatar className="cursor-pointer">
           <AvatarImage 
-            src={recruiter?.profileImage || ''} // update source to profile image if you have
+            src={user?.profileImage || ''} // update source to profile image if you have
             alt="User Avatar"
           />
           <AvatarFallback>
-            {recruiter?.firstName?.charAt(0)}
+            {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
           </AvatarFallback>
         </Avatar>
         {/* Small username initials (optional, can be removed) */}
@@ -244,27 +241,21 @@ export default function Sidebar({ className }: SidebarProps) {
         {/* Dropdown appears on avatar hover */}
         <div className="absolute left-full top-1/2 -translate-y-1/2 min-w-[180px] bg-white border border-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto z-10 transition-opacity duration-200">
           <div className="flex flex-col py-2">
-            <a href={`/dashboard/account/${recruiter?.id}`}
+            <a href={`/dashboard/settings/`}
               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-base"><User className="h-4 w-4" /></span>
               Account
             </a>
             <a
-              href={`/dashboard/settings/${recruiter?.id}`}
+              href={`/dashboard/settings/`}
               className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
             >
               <span className="material-symbols-outlined text-base"><Settings2 className="h-4 w-4" /></span>
               Settings
             </a>
             <button
-              onClick={() => {
-                if (typeof window !== 'undefined') {
-                  localStorage.removeItem('token');
-                  localStorage.removeItem('recruiter');
-                }
-                router.push('/login');
-              }}
+              onClick={logout}
               className="px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2 text-left w-full"
             >
               <span className="material-symbols-outlined text-base"><LogOut className="h-4 w-4" /></span>
