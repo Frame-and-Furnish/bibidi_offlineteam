@@ -1,9 +1,17 @@
+'use client';
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
+import { useUser } from "@/contexts/UserContext";
+import { LogOut, Settings2, User } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Home() {
+  const { isAuthenticated } = useUser();
+  const { logout } = useUser();
+  const { user } = useUser();
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -29,12 +37,69 @@ export default function Home() {
               <Link href="#services" className="text-sm font-medium hover:text-primary transition-colors">
                 Services
               </Link>
-              <Link href="/login">
-                <Button variant="ghost" size="sm">Login</Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm">Get Started</Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link href="/dashboard">
+                    <Button size="sm">Dashboard</Button>
+                  </Link>
+                  <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {/* User Avatar, adapt with user image/name */}
+            <div className="relative group">
+              <div className="flex items-center gap-2 cursor-pointer select-none">
+                {/* Replace with dynamic user image if available */}
+                <Avatar>
+                  <AvatarImage 
+                    src={user?.profileImage || ''} // update source to profile image if you have
+                    alt="User Avatar"
+                  />
+                  <AvatarFallback>
+                    {/* Fallback initials, update with user info */}
+                    {user?.firstName?.charAt(0) || user?.email?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                {/* Render username if desired */}
+                <span className="font-medium text-gray-900 text-sm">{user?.firstName || user?.email}</span>
+              </div>
+              {/* Dropdown on hover */}
+              <div className="absolute left-0 min-w-[180px] bg-white border border-gray-200 rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto z-10 transition-opacity duration-200">
+                <div className="flex flex-col py-2">
+                  <a href={`/dashboard/settings/`}
+                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-base"><User className="h-4 w-4" /></span>
+                    Account
+                  </a>
+                  <a
+                    href={`/dashboard/settings/`}
+                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-base"><Settings2 className="h-4 w-4" /></span>
+                    Settings
+                  </a>
+                  <button
+                    onClick={logout}
+                    className="px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2 text-left w-full"
+                  >
+                    <span className="material-symbols-outlined text-base"><LogOut className="h-4 w-4" /></span>
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+                  </>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button size="sm">Login</Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="sm">Get Started</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

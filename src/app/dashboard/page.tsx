@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -126,6 +127,7 @@ const mockServiceProviders: ServiceProvider[] = [
 const serviceCategories = ['All', 'Carpentry', 'Painting', 'Electrical', 'Plumbing', 'Masonry', 'Gardening'];
 
 export default function Dashboard() {
+  const { user, token } = useUser();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -135,20 +137,20 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchProviders = async () => {
-      const token = localStorage.getItem('token');
-      const recruiter = JSON.parse(localStorage.getItem('recruiter') || '{}');
+      if (!token || !user) return;
+      
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/offline/providers`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       console.log('Providers:', response.data.data.providers);
-      console.log('Recruiter:', recruiter);
+      console.log('Recruiter:', user);
       //setProviders(response.data.data.providers)
-      setProviders(response.data.data.providers.filter((provider: ServiceProvider) => provider?.recruiter?.email == recruiter.email));
+      setProviders(response.data.data.providers.filter((provider: ServiceProvider) => provider?.recruiter?.email == user.email));
     };
     fetchProviders(); 
-  }, []);
+  }, [token, user]);
   // Calculate stats
   const stats = useMemo(() => {
     const totalOnboarded = providers.filter(p => p.status === 'active').length;
