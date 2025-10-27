@@ -143,9 +143,7 @@ useEffect(() => {
   const filteredMembers = teamMembers.filter(
     (member) =>
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.role.toLowerCase().includes(searchQuery.toLowerCase())
+      member.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleSendInvite = () => {
@@ -368,7 +366,7 @@ useEffect(() => {
                     }}
                   >
                     <Send className="mr-2 h-4 w-4" />
-                    Send Invite
+                    Send Message
                   </Button>
                 </div>
               </CardContent>
